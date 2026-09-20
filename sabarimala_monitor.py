@@ -504,12 +504,18 @@ def main() -> int:
         and result["day_statuses"].get(str(day)) == "enabled"
     ]
 
-    save_current_state(
-        {
-            "day_statuses": result["day_statuses"],
-            "last_run": timestamp,
-        }
-    )
+    # Only persist state when the check actually completed. A failed run
+    # (e.g. login blocked) has an empty/partial result -- saving it would
+    # clobber the last known-good statuses and silently break transition
+    # detection ("disabled" -> "enabled") on the next successful run, since
+    # there'd be nothing real left to compare against.
+    if not fatal_error:
+        save_current_state(
+            {
+                "day_statuses": result["day_statuses"],
+                "last_run": timestamp,
+            }
+        )
 
     report_path = write_status_report(result, newly_open_days, timestamp)
 
