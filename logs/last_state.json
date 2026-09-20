@@ -1,4 +1,8 @@
 {
-  "day_statuses": {},
-  "last_run": "20260920_173316"
+  "day_statuses": {
+    "2": "disabled",
+    "3": "disabled",
+    "4": "disabled"
+  },
+  "last_run": "20260920_131836"
 }
