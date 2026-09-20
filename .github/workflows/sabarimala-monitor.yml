@@ -1,9 +1,14 @@
 name: Sabarimala Virtual-Q Monitor
 
 on:
-  schedule:
-    - cron: '30 2,14 * * *'   # 8:00 AM and 8:00 PM IST (02:30 / 14:30 UTC)
-  workflow_dispatch:            # allow manual trigger from GitHub UI
+  # Schedule intentionally disabled: GitHub-hosted runners share IP ranges
+  # that the portal's bot detection blocks (confirmed -- run 35519187438
+  # got served a "confirm you are human" challenge instead of the login
+  # page). Re-enable once this runs on a self-hosted runner or equivalent
+  # with a residential IP.
+  # schedule:
+  #   - cron: '30 2,14 * * *'   # 8:00 AM and 8:00 PM IST (02:30 / 14:30 UTC)
+  workflow_dispatch:              # manual trigger from GitHub UI still works
 
 permissions:
   contents: write   # needed to commit back logs/last_state.json

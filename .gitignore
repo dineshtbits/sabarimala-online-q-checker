@@ -3,7 +3,8 @@ __pycache__/
 .DS_Store
 
 # Runtime logs/screenshots/reports are regenerated every run and are noisy
-# in diffs -- but last_state.json is the one file the workflow needs to
-# persist across runs (disabled->enabled transition detection), so keep it.
+# in diffs -- but these two state files need to persist across runs
+# (disabled->enabled / marquee-text-change detection), so keep them.
 logs/*
 !logs/last_state.json
+!logs/last_marquee.json
