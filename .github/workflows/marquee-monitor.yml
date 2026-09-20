@@ -1,0 +1,54 @@
+name: Sabarimala Marquee Monitor
+
+on:
+  workflow_dispatch:   # manual only for now -- testing whether GitHub-hosted
+                        # runners can even reach the landing page without
+                        # tripping the portal's bot-detection challenge that
+                        # blocked the full login flow (run 35519187438).
+
+permissions:
+  contents: write   # needed to commit back logs/last_marquee.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Run marquee monitor
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          HEADLESS: 'true'
+        run: python marquee_monitor.py
+
+      - name: Commit updated state (if changed)
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/last_marquee.json
+          git diff --cached --quiet || git commit -m "Update marquee state [skip ci]"
+          git push || true
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: marquee-run-${{ github.run_id }}
+          path: logs/run_*.log
+          retention-days: 7
+          if-no-files-found: ignore
