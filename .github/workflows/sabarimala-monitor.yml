@@ -1,0 +1,58 @@
+name: Sabarimala Virtual-Q Monitor
+
+on:
+  schedule:
+    - cron: '30 2,14 * * *'   # 8:00 AM and 8:00 PM IST (02:30 / 14:30 UTC)
+  workflow_dispatch:            # allow manual trigger from GitHub UI
+
+permissions:
+  contents: write   # needed to commit back logs/last_state.json
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+
+      - name: Run calendar monitor
+        env:
+          SABARIMALA_USERNAME: ${{ secrets.SABARIMALA_USERNAME }}
+          SABARIMALA_PASSWORD: ${{ secrets.SABARIMALA_PASSWORD }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          HEADLESS: 'true'
+        run: python sabarimala_monitor.py
+
+      - name: Commit updated state (if changed)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add logs/last_state.json
+          git diff --cached --quiet || git commit -m "Update calendar state [skip ci]"
+          git push || true
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-${{ github.run_id }}
+          path: |
+            logs/run_*.log
+            logs/screenshot_*.png
+            logs/status_*.txt
+          retention-days: 7
+          if-no-files-found: ignore

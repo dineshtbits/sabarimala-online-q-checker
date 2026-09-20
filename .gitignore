@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# Runtime logs/screenshots/reports are regenerated every run and are noisy
+# in diffs -- but last_state.json is the one file the workflow needs to
+# persist across runs (disabled->enabled transition detection), so keep it.
+logs/*
+!logs/last_state.json
