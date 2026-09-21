@@ -1,11 +1,11 @@
 name: Sabarimala Virtual-Q Monitor
 
 on:
-  # Schedule intentionally disabled: GitHub-hosted runners share IP ranges
-  # that the portal's bot detection blocks (confirmed -- run 35519187438
-  # got served a "confirm you are human" challenge instead of the login
-  # page). Re-enable once this runs on a self-hosted runner or equivalent
-  # with a residential IP.
+  # Schedule stays off until a successful run is confirmed on the
+  # self-hosted runner (workflow_dispatch below). GitHub-hosted runners are
+  # blocked outright by the portal's bot detection (confirmed -- run
+  # 35519187438 got served a "confirm you are human" challenge before even
+  # reaching the login page), which is why this moved to self-hosted.
   # schedule:
   #   - cron: '30 2,14 * * *'   # 8:00 AM and 8:00 PM IST (02:30 / 14:30 UTC)
   workflow_dispatch:              # manual trigger from GitHub UI still works
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS]
 
     steps:
       - name: Checkout repo
@@ -28,8 +28,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install playwright
-          playwright install chromium --with-deps
+          pip3 install playwright
+          playwright install chromium
 
       - name: Run calendar monitor
         env:
@@ -39,10 +39,10 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           HEADLESS: 'true'
-        run: python sabarimala_monitor.py
+        run: python3 sabarimala_monitor.py
 
       - name: Commit updated state (if changed)
-        if: always()
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
