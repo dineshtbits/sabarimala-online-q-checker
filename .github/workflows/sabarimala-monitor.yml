@@ -21,10 +21,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      - name: Check Python version
+        run: python3 --version   # uses the Mac's own system Python3 --
+                                  # actions/setup-python@v5 assumes the
+                                  # hosted-runner home dir (/Users/runner)
+                                  # for its tool cache, which fails here
 
       - name: Install dependencies
         run: |
