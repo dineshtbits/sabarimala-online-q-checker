@@ -1,14 +1,12 @@
 name: Sabarimala Virtual-Q Monitor
 
 on:
-  # Schedule stays off until a successful run is confirmed on the
-  # self-hosted runner (workflow_dispatch below). GitHub-hosted runners are
-  # blocked outright by the portal's bot detection (confirmed -- run
-  # 35519187438 got served a "confirm you are human" challenge before even
-  # reaching the login page), which is why this moved to self-hosted.
-  # schedule:
-  #   - cron: '30 2,14 * * *'   # 8:00 AM and 8:00 PM IST (02:30 / 14:30 UTC)
-  workflow_dispatch:              # manual trigger from GitHub UI still works
+  # Confirmed working end-to-end on the self-hosted runner (run
+  # 36252219414). Starting conservative at once daily; frequency to be
+  # revisited later.
+  schedule:
+    - cron: '30 2 * * *'   # 8:00 AM IST (02:30 UTC)
+  workflow_dispatch:        # manual trigger from GitHub UI still works
 
 permissions:
   contents: write   # needed to commit back logs/last_state.json

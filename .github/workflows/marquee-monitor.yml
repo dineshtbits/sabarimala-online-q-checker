@@ -1,12 +1,12 @@
 name: Sabarimala Marquee Monitor
 
 on:
-  # Schedule stays off until a successful run is confirmed on the
-  # self-hosted runner. Confirmed unusable on GitHub-hosted runners (run
-  # 35529051279 -- blocked on the very first page load, before login was
-  # even attempted), which is why this moved to self-hosted.
-  # schedule:
-  #   - cron: '*/15 * * * *'   # every 15 minutes
+  # Confirmed working end-to-end on the self-hosted runner (run
+  # 36252875425). Starting conservative at once daily, same as the
+  # calendar monitor; intended frequency (every 15 min) to be dialed in
+  # later once the schedule's been running reliably for a bit.
+  schedule:
+    - cron: '30 2 * * *'   # 8:00 AM IST (02:30 UTC)
   workflow_dispatch:
 
 permissions:
