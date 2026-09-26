@@ -29,7 +29,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip3 install playwright
+          # Pinned to 1.61.0: this runner is stuck on macOS 13 (Ventura,
+          # last supported OS for its 2017 hardware), and Playwright
+          # dropped Chromium support for mac13 in 1.62.0 (confirmed via
+          # playwright-core's registry DOWNLOAD_PATHS across release
+          # tags -- defined in release-1.61, undefined in release-1.62).
+          # Bump this only after the runner machine is upgraded/replaced.
+          pip3 install "playwright==1.61.0"
           playwright install chromium
 
       - name: Run calendar monitor
