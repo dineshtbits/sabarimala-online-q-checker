@@ -241,9 +241,11 @@ def login(page: Page, logger: logging.Logger) -> None:
 # CALENDAR
 # =============================================================================
 
-def open_virtual_q_calendar(page: Page, logger: logging.Logger) -> None:
-    """Click the 'Virtual-Q' dashboard tile (routes to #/darshan), then open
-    the Select Date field's Material datepicker overlay."""
+def navigate_to_virtual_q(page: Page, logger: logging.Logger) -> None:
+    """Click the 'Virtual-Q' dashboard tile (routes to #/darshan). Only
+    needed once per session -- a reload of #/darshan stays on #/darshan
+    (hash routing), so callers that reload in place should call
+    open_date_picker() directly instead of this."""
     logger.info("Navigating to Virtual-Q booking section")
     page.get_by_text(VIRTUAL_Q_TILE_TEXT, exact=True).first.click(timeout=20_000)
 
@@ -253,6 +255,10 @@ def open_virtual_q_calendar(page: Page, logger: logging.Logger) -> None:
     page.locator(SELECTOR_DATE_FIELD_TOGGLE).first.wait_for(state="visible", timeout=20_000)
     human_delay(800, 1500)
 
+
+def open_date_picker(page: Page, logger: logging.Logger) -> None:
+    """Open the Select Date field's Material datepicker overlay. Assumes
+    the page is already on #/darshan (see navigate_to_virtual_q)."""
     logger.info("Opening the Select Date calendar popup")
     # The <mat-datepicker-toggle> wrapper element itself fails Playwright's
     # visibility check (zero-size custom element box) even though its inner
@@ -261,6 +267,14 @@ def open_virtual_q_calendar(page: Page, logger: logging.Logger) -> None:
     page.locator(SELECTOR_DATE_FIELD_TOGGLE).first.click(timeout=15_000, force=True)
     page.locator(SELECTOR_CALENDAR_CONTAINER).first.wait_for(state="visible", timeout=15_000)
     logger.info("Calendar widget is visible")
+
+
+def open_virtual_q_calendar(page: Page, logger: logging.Logger) -> None:
+    """Navigate to Virtual-Q and open the date picker -- the full first-time
+    sequence. For repeat checks within the same session after a page
+    reload, call open_date_picker() directly (see continuous_monitor.py)."""
+    navigate_to_virtual_q(page, logger)
+    open_date_picker(page, logger)
 
 
 def parse_cell_date(aria_label: str):
