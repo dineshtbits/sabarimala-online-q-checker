@@ -52,7 +52,7 @@ from playwright.sync_api import sync_playwright
 from sabarimala_monitor import (
     HEADLESS,
     LOG_DIR,
-    SELECTOR_DASHBOARD_READY,
+    SELECTOR_USERNAME_FIELD,
     TARGET_DAYS,
     TARGET_MONTH_NAME,
     USER_AGENT,
@@ -121,11 +121,16 @@ def save_daemon_state(day_statuses: dict, timestamp: str) -> None:
 
 
 def is_still_logged_in(page) -> bool:
+    """Route-agnostic logged-in check. SELECTOR_DASHBOARD_READY ("Dashboard"
+    text) only exists on #/home, but reload() keeps us on #/darshan -- so
+    instead check whether the login form reappeared, which it does on ANY
+    route once the session is actually invalid, regardless of which
+    authenticated page we were last on."""
     try:
-        page.locator(SELECTOR_DASHBOARD_READY).first.wait_for(state="visible", timeout=5_000)
-        return True
+        page.locator(SELECTOR_USERNAME_FIELD).first.wait_for(state="visible", timeout=3_000)
+        return False  # login form showed up -- session is gone
     except Exception:
-        return False
+        return True  # login form never appeared -- still authenticated
 
 
 def run_cycle(page, logger: logging.Logger) -> dict:
