@@ -23,18 +23,6 @@ worth seeing — see "Email gating" below — not on all 24 hourly runs.
 - `test_login.py` / `test_calendar.py` / `test_email.py` — isolate one
   stage each, for debugging without running (or emailing from) the full
   pipeline.
-- `continuous_monitor.py`, `run_daemon.sh`,
-  `com.dineshtbits.sabarimala-daemon.plist`, `test_session_persistence.py`
-  — a built-and-tested but **currently unused** alternative design: a
-  self-updating daemon that logs in once and loops forever instead of
-  logging in fresh every check. Built when the plan was to keep using a
-  real account (where login frequency was a real lockout concern);
-  superseded by the hourly-on-a-throwaway-account approach above, which is
-  simpler to operate. Left in place in case the throwaway-account approach
-  ever needs revisiting. See `continuous_monitor.py`'s module docstring
-  for the full design, and `test_session_persistence.py` for why it keeps
-  one browser session alive rather than saving/restoring login state
-  between runs (the app detects and wipes a replayed session).
 
 ## Email gating
 `sabarimala_monitor.py` always checks and persists state on every hourly

@@ -272,9 +272,10 @@ def open_date_picker(page: Page, logger: logging.Logger) -> None:
 
 
 def open_virtual_q_calendar(page: Page, logger: logging.Logger) -> None:
-    """Navigate to Virtual-Q and open the date picker -- the full first-time
-    sequence. For repeat checks within the same session after a page
-    reload, call open_date_picker() directly (see continuous_monitor.py)."""
+    """Navigate to Virtual-Q and open the date picker -- the full
+    sequence used by every check (this pipeline logs in and navigates
+    fresh each run, unlike a long-lived session that would only need to
+    reopen the date picker after a reload)."""
     navigate_to_virtual_q(page, logger)
     open_date_picker(page, logger)
 
