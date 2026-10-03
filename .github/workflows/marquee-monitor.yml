@@ -43,7 +43,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           HEADLESS: 'true'
-        run: python3 marquee_monitor.py
+        run: python3 monitors/marquee_monitor.py
 
       - name: Commit updated state (if changed)
         if: success()

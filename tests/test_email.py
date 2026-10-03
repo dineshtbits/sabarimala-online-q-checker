@@ -15,7 +15,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "monitors"))
 
 from sabarimala_monitor import LOG_DIR, send_email_notification, setup_logging
 

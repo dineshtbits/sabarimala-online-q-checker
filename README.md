@@ -9,14 +9,14 @@ secondary/throwaway portal account (not a real one) specifically so that
 frequency is an acceptable risk. It only emails when something's actually
 worth seeing — see "Email gating" below — not on all 24 hourly runs.
 
-`marquee_monitor.py` separately polls the portal's public notice banner
-(no login) once daily; see its own section below.
+`monitors/marquee_monitor.py` separately polls the portal's public notice
+banner (no login) once daily; see its own section below.
 
 ## Files
-- `sabarimala_monitor.py` — the full pipeline: login, calendar check, email
-  gating. Also where all shared selectors/helpers live.
-- `marquee_monitor.py` — lightweight, login-free poll of the portal's
-  notice banner; emails only if the text changes. **Known limitation:**
+- `monitors/sabarimala_monitor.py` — the full pipeline: login, calendar
+  check, email gating. Also where all shared selectors/helpers live.
+- `monitors/marquee_monitor.py` — lightweight, login-free poll of the
+  portal's notice banner; emails only if the text changes. **Known limitation:**
   confirmed (Oct 2026) that the site can release new booking dates without
   updating this banner at all, so it's a supplementary signal only, not a
   substitute for the real calendar check.
@@ -26,8 +26,8 @@ worth seeing — see "Email gating" below — not on all 24 hourly runs.
   `python3 tests/test_login.py`.
 
 ## Email gating
-`sabarimala_monitor.py` always checks and persists state on every hourly
-run, but only sends an email when:
+`monitors/sabarimala_monitor.py` always checks and persists state on every
+hourly run, but only sends an email when:
 - The run failed (always — a different kind of signal you'd want
   regardless of time), or
 - Any watched day is **currently** open (every hour it stays open, not
@@ -47,9 +47,9 @@ export SABARIMALA_PASSWORD="your_portal_password"
 export SMTP_USER="you@gmail.com"
 export SMTP_PASS="your-gmail-app-password"   # NOT your login password
 export MAIL_TO="you@gmail.com"
-python3 sabarimala_monitor.py
+python3 monitors/sabarimala_monitor.py
 ```
-Watch it run with `HEADLESS=false python3 sabarimala_monitor.py`.
+Watch it run with `HEADLESS=false python3 monitors/sabarimala_monitor.py`.
 
 ## Gmail app password
 Google Account → Security → 2-Step Verification → App passwords. Use that
@@ -87,7 +87,7 @@ as an audit log of exactly when something changed.
 ## Notes
 - This repo is public: the code is visible to anyone, but no credentials
   live in it — everything sensitive is a GitHub Actions secret.
-- Selectors in `sabarimala_monitor.py` target the site's real DOM (an
+- Selectors in `monitors/sabarimala_monitor.py` target the site's real DOM (an
   Angular Material datepicker), verified against the live site. If the site
   changes its markup, the `SELECTOR_*` constants are centralized near the
   top of the file.

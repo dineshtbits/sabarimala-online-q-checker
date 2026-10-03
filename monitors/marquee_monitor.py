@@ -19,7 +19,7 @@ Usage:
     export SMTP_USER="you@gmail.com"
     export SMTP_PASS="your-gmail-app-password"
     export MAIL_TO="you@gmail.com"
-    python3 marquee_monitor.py
+    python3 monitors/marquee_monitor.py
 
 Note: like sabarimala_monitor.py, this must run from a residential/home IP
 -- GitHub-hosted Actions runners get blocked by the portal's bot detection

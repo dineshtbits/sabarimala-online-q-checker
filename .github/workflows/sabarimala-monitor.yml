@@ -3,7 +3,7 @@ name: Sabarimala Virtual-Q Monitor
 on:
   # Hourly, full login+calendar flow, now using a secondary/throwaway
   # portal account (not the real one) specifically so this frequency is an
-  # acceptable risk. sabarimala_monitor.py itself decides whether to
+  # acceptable risk. monitors/sabarimala_monitor.py itself decides whether to
   # actually send an email each run (see MORNING_DIGEST_START_HOUR /
   # MORNING_DIGEST_END_HOUR there) -- it emails only when a target day is
   # currently open, or during the once-daily morning digest window, not on
@@ -48,7 +48,7 @@ jobs:
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
           MAIL_TO: ${{ secrets.MAIL_TO }}
           HEADLESS: 'true'
-        run: python3 sabarimala_monitor.py
+        run: python3 monitors/sabarimala_monitor.py
 
       - name: Commit updated state (if changed)
         if: success()
