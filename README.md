@@ -20,9 +20,10 @@ worth seeing — see "Email gating" below — not on all 24 hourly runs.
   confirmed (Oct 2026) that the site can release new booking dates without
   updating this banner at all, so it's a supplementary signal only, not a
   substitute for the real calendar check.
-- `test_login.py` / `test_calendar.py` / `test_email.py` — isolate one
-  stage each, for debugging without running (or emailing from) the full
-  pipeline.
+- `tests/test_login.py` / `tests/test_calendar.py` / `tests/test_email.py`
+  — isolate one stage each, for debugging without running (or emailing
+  from) the full pipeline. Run from the repo root, e.g.
+  `python3 tests/test_login.py`.
 
 ## Email gating
 `sabarimala_monitor.py` always checks and persists state on every hourly

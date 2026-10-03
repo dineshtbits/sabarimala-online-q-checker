@@ -4,15 +4,18 @@ Standalone SMTP smoke test for sabarimala_monitor.py's send_email_notification()
 
 No browser, no portal login -- just verifies Gmail SMTP auth and delivery.
 
-Usage:
+Usage (from the repo root):
     export SMTP_USER="you@gmail.com"
     export SMTP_PASS="your-gmail-app-password"
     export MAIL_TO="you@gmail.com"
-    python3 test_email.py
+    python3 tests/test_email.py
 """
 
 import sys
 from datetime import datetime
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sabarimala_monitor import LOG_DIR, send_email_notification, setup_logging
 
