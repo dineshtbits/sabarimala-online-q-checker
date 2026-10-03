@@ -3,7 +3,7 @@
 Sabarimala Virtual-Q Calendar Monitor
 ======================================
 Logs into the Sabarimala Online Portal, opens the Virtual-Q booking calendar,
-inspects December 2nd, 3rd, and 4th for open/available slots, and emails a
+inspects December 1st, 2nd, and 3rd for open/available slots, and emails a
 status report to a Gmail address. Detects disabled -> enabled transitions on
 any of those three days and sends a high-priority alert the moment one
 opens up.
@@ -28,7 +28,7 @@ ENVIRONMENT VARIABLES (set these before running -- never hardcode secrets)
 
     TARGET_YEAR            Optional, defaults to current year
     TARGET_DAYS            Optional, comma-separated days to watch in
-                            TARGET_MONTH_NAME, defaults to "2,3,4"
+                            TARGET_MONTH_NAME, defaults to "1,2,3"
     HEADLESS                Optional, "true"/"false", defaults to "true"
 
     Example (zsh), add to ~/.zshrc or a local .env you `source`:
@@ -95,7 +95,7 @@ STATE_FILE = LOG_DIR / "last_state.json"
 
 TARGET_MONTH_NAME = "December"
 TARGET_DAYS = [
-    int(d.strip()) for d in os.environ.get("TARGET_DAYS", "2,3,4").split(",") if d.strip()
+    int(d.strip()) for d in os.environ.get("TARGET_DAYS", "1,2,3").split(",") if d.strip()
 ]
 TARGET_YEAR = os.environ.get("TARGET_YEAR", str(datetime.now().year))
 

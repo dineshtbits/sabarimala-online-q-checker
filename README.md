@@ -1,6 +1,6 @@
 # Sabarimala Virtual-Q calendar monitor
 
-Logs into sabarimalaonline.org and checks whether December 2/3/4 are open
+Logs into sabarimalaonline.org and checks whether December 1/2/3 are open
 for Virtual-Q booking, emailing a status report.
 
 **Current setup**: `sabarimala-monitor.yml` runs the full login+calendar
