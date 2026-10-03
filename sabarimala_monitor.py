@@ -71,6 +71,7 @@ import smtplib
 import sys
 import time
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
@@ -143,6 +144,15 @@ CALENDAR_CELL_DATE_FORMAT = "%a %b %d %Y"
 
 MAX_MONTH_ADVANCE_CLICKS = 12
 
+# Runs hourly (see .github/workflows/sabarimala-monitor.yml), but only
+# emails when something's actually worth seeing: any target day is
+# currently open, OR it's within this morning window -- guaranteeing one
+# daily "yes, still watching, here's the status" email even when nothing
+# changed, without emailing all 24 hourly runs.
+IST = ZoneInfo("Asia/Kolkata")
+MORNING_DIGEST_START_HOUR = 8   # inclusive, IST
+MORNING_DIGEST_END_HOUR = 10    # exclusive, IST
+
 
 # =============================================================================
 # LOGGING
@@ -185,17 +195,9 @@ def type_like_human(page: Page, selector: str, text: str, logger: logging.Logger
 
 
 # =============================================================================
-# STATE (for disabled -> enabled transition detection across runs)
+# STATE (persisted across runs -- the git history of STATE_FILE itself
+# doubles as the audit log of when a day's status changed)
 # =============================================================================
-
-def load_previous_state() -> dict:
-    if STATE_FILE.exists():
-        try:
-            return json.loads(STATE_FILE.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return {}
-    return {}
-
 
 def save_current_state(state: dict) -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -421,7 +423,7 @@ def send_email_notification(
 # REPORTING
 # =============================================================================
 
-def write_status_report(result: dict, newly_open_days: list[str], timestamp: str) -> Path:
+def write_status_report(result: dict, open_days: list[str], timestamp: str) -> Path:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     report_path = LOG_DIR / f"status_{timestamp}.txt"
 
@@ -432,7 +434,7 @@ def write_status_report(result: dict, newly_open_days: list[str], timestamp: str
         f"Watched days: {', '.join(str(d) for d in TARGET_DAYS)}",
         "",
         f"Month reached successfully: {result['month_reached']}",
-        f"Newly opened since last run: {', '.join(newly_open_days) if newly_open_days else 'none'}",
+        f"Currently open: {', '.join(open_days) if open_days else 'none'}",
         "",
         "Watched day statuses:",
     ]
@@ -444,11 +446,11 @@ def write_status_report(result: dict, newly_open_days: list[str], timestamp: str
     return report_path
 
 
-def build_email_body(result: dict, newly_open_days: list[str], timestamp: str) -> str:
-    if newly_open_days:
-        header = f"ALERT: Booking just opened for {TARGET_MONTH_NAME} {', '.join(newly_open_days)}!"
+def build_email_body(result: dict, open_days: list[str], timestamp: str) -> str:
+    if open_days:
+        header = f"ALERT: {TARGET_MONTH_NAME} {', '.join(open_days)} is OPEN for booking!"
     else:
-        header = "Daily status digest"
+        header = "Hourly status digest"
 
     status_lines = "\n".join(
         f"  {TARGET_MONTH_NAME} {day}: {result['day_statuses'].get(str(day), 'not found').upper()}"
@@ -508,21 +510,13 @@ def main() -> int:
         context.close()
         browser.close()
 
-    previous_state = load_previous_state()
-    previous_day_statuses = previous_state.get("day_statuses", {})
-
-    newly_open_days = [
-        str(day)
-        for day in TARGET_DAYS
-        if previous_day_statuses.get(str(day)) == "disabled"
-        and result["day_statuses"].get(str(day)) == "enabled"
+    open_days = [
+        str(day) for day in TARGET_DAYS if result["day_statuses"].get(str(day)) == "enabled"
     ]
 
     # Only persist state when the check actually completed. A failed run
     # (e.g. login blocked) has an empty/partial result -- saving it would
-    # clobber the last known-good statuses and silently break transition
-    # detection ("disabled" -> "enabled") on the next successful run, since
-    # there'd be nothing real left to compare against.
+    # clobber the last known-good statuses with nothing real.
     if not fatal_error:
         save_current_state(
             {
@@ -531,22 +525,40 @@ def main() -> int:
             }
         )
 
-    report_path = write_status_report(result, newly_open_days, timestamp)
+    report_path = write_status_report(result, open_days, timestamp)
+
+    # Runs hourly, but only emails when it's actually worth seeing: a run
+    # failure (always -- that's a different signal you'd want regardless of
+    # time), a target day currently open (every hour it stays open, not
+    # just the hour it first did -- a standing reminder beats a one-shot
+    # ping for something this time-sensitive), or the once-daily morning
+    # window so you get a guaranteed "yes, still watching" digest without
+    # 24 emails a day.
+    now_ist = datetime.now(IST)
+    in_digest_window = MORNING_DIGEST_START_HOUR <= now_ist.hour < MORNING_DIGEST_END_HOUR
+    should_email = bool(fatal_error) or bool(open_days) or in_digest_window
+
+    if not should_email:
+        logger.info(
+            "No email: no open days, and outside the %d:00-%d:00 IST digest window (now %s IST)",
+            MORNING_DIGEST_START_HOUR, MORNING_DIGEST_END_HOUR, now_ist.strftime("%H:%M"),
+        )
+        return 0
 
     if fatal_error:
         subject = "[Sabarimala Monitor] Run FAILED"
         body = f"The monitoring run failed before completing.\n\nError: {fatal_error}\n\nSee attached log/screenshot."
         high_priority = True
-    elif newly_open_days:
-        subject = f"[Sabarimala Monitor] ALERT: {TARGET_MONTH_NAME} {', '.join(newly_open_days)} now OPEN"
-        body = build_email_body(result, newly_open_days, timestamp)
+    elif open_days:
+        subject = f"[Sabarimala Monitor] ALERT: {TARGET_MONTH_NAME} {', '.join(open_days)} OPEN for booking"
+        body = build_email_body(result, open_days, timestamp)
         high_priority = True
     else:
         statuses_summary = ", ".join(
             f"{day}={result['day_statuses'].get(str(day), '?')}" for day in TARGET_DAYS
         )
-        subject = f"[Sabarimala Monitor] Daily digest - {statuses_summary}"
-        body = build_email_body(result, newly_open_days, timestamp)
+        subject = f"[Sabarimala Monitor] Morning digest - {statuses_summary}"
+        body = build_email_body(result, open_days, timestamp)
         high_priority = False
 
     try:
