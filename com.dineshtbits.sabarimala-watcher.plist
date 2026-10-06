@@ -2,7 +2,9 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  launchd LaunchAgent: runs monitors/run_watcher.sh every 10 minutes.
+  launchd LaunchAgent: keeps monitors/run_watcher.sh running. The watcher
+  itself checks every 10 minutes and exits when new code lands on main,
+  and KeepAlive relaunches it (run_watcher.sh pulls first).
 
   BEFORE installing, replace /Users/CHANGEME with your home directory and
   clone path, e.g. /Users/dinesh/sabarimala-watcher. See README.
@@ -24,9 +26,12 @@
     <key>RunAtLoad</key>
     <true/>
 
-    <!-- Every 600 seconds. Each run is a fresh process, so no KeepAlive. -->
-    <key>StartInterval</key>
-    <integer>600</integer>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Minimum seconds between relaunches, so a crash loop can't spin the CPU. -->
+    <key>ThrottleInterval</key>
+    <integer>60</integer>
 
     <key>StandardOutPath</key>
     <string>/Users/CHANGEME/sabarimala-watcher/logs/watcher_stdout.log</string>
