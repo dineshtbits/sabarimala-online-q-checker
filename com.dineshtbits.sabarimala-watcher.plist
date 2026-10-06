@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  launchd LaunchAgent: runs monitors/run_watcher.sh every 10 minutes.
+
+  BEFORE installing, replace /Users/CHANGEME with your home directory and
+  clone path, e.g. /Users/dinesh/sabarimala-watcher. See README.
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.dineshtbits.sabarimala-watcher</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/CHANGEME/sabarimala-watcher/monitors/run_watcher.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/CHANGEME/sabarimala-watcher</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Every 600 seconds. Each run is a fresh process, so no KeepAlive. -->
+    <key>StartInterval</key>
+    <integer>600</integer>
+
+    <key>StandardOutPath</key>
+    <string>/Users/CHANGEME/sabarimala-watcher/logs/watcher_stdout.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/CHANGEME/sabarimala-watcher/logs/watcher_stderr.log</string>
+</dict>
+</plist>
