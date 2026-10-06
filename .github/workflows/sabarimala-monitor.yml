@@ -1,15 +1,11 @@
 name: Sabarimala Virtual-Q Monitor
 
 on:
-  # Hourly, full login+calendar flow, now using a secondary/throwaway
-  # portal account (not the real one) specifically so this frequency is an
-  # acceptable risk. monitors/sabarimala_monitor.py itself decides whether to
-  # actually send an email each run (see MORNING_DIGEST_START_HOUR /
-  # MORNING_DIGEST_END_HOUR there) -- it emails only when a target day is
-  # currently open, or during the once-daily morning digest window, not on
-  # all 24 runs.
+  # Every hour at the top of the IST hour (IST is UTC+5:30, so :00 IST is
+  # :30 UTC). Emails only when a target day is open, or on the 8 AM IST
+  # run (see monitors/sabarimala_monitor.py).
   schedule:
-    - cron: '0 * * * *'
+    - cron: '30 * * * *'
   workflow_dispatch:        # manual trigger from GitHub UI still works
 
 permissions:

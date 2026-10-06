@@ -26,17 +26,14 @@ banner (no login) once daily; see its own section below.
   `python3 tests/test_login.py`.
 
 ## Email gating
-`monitors/sabarimala_monitor.py` always checks and persists state on every
-hourly run, but only sends an email when:
-- The run failed (always — a different kind of signal you'd want
-  regardless of time), or
-- Any watched day is **currently** open (every hour it stays open, not
-  just the hour it first opened — a standing reminder, not a one-shot
-  ping), or
-- It's within the once-daily morning digest window
-  (`MORNING_DIGEST_START_HOUR`/`MORNING_DIGEST_END_HOUR` in the CONFIG
-  section, currently 8–10 AM IST) — guarantees one "yes, still watching"
-  email a day even when nothing changed.
+`monitors/sabarimala_monitor.py` runs every hour at the top of the IST hour
+and sends an email only when:
+- Any watched day is **currently** open (every hour it stays open), or
+- It's the 8 AM IST run (`DIGEST_HOUR_IST` in the CONFIG section) — the
+  daily status digest, sent whether or not anything is open.
+
+Run failures are **not** emailed at other hours; they show up in the 8 AM
+digest and in the Actions run history.
 
 ## Run the one-shot pipeline locally
 ```
@@ -64,7 +61,7 @@ gh secret set SMTP_PASS
 gh secret set MAIL_TO
 ```
 Each prompts for the value interactively so it never touches shell history.
-`sabarimala-monitor.yml` runs hourly; `marquee-monitor.yml` runs once daily
+`sabarimala-monitor.yml` runs hourly (`:30` UTC = top of the IST hour); `marquee-monitor.yml` runs once daily
 at 8:00 AM IST. Either can be run on-demand via Actions → (workflow name)
 → Run workflow. They need a **self-hosted** runner — GitHub-hosted runners
 get blocked by the portal's bot detection before even reaching the login

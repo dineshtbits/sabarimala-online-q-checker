@@ -144,14 +144,10 @@ CALENDAR_CELL_DATE_FORMAT = "%a %b %d %Y"
 
 MAX_MONTH_ADVANCE_CLICKS = 12
 
-# Runs hourly (see .github/workflows/sabarimala-monitor.yml), but only
-# emails when something's actually worth seeing: any target day is
-# currently open, OR it's within this morning window -- guaranteeing one
-# daily "yes, still watching, here's the status" email even when nothing
-# changed, without emailing all 24 hourly runs.
+# Runs hourly (see .github/workflows/sabarimala-monitor.yml) and emails only
+# when a target day is open, or on the 8 AM IST run (the daily digest).
 IST = ZoneInfo("Asia/Kolkata")
-MORNING_DIGEST_START_HOUR = 8   # inclusive, IST
-MORNING_DIGEST_END_HOUR = 10    # exclusive, IST
+DIGEST_HOUR_IST = 8
 
 
 # =============================================================================
@@ -528,22 +524,13 @@ def main() -> int:
 
     report_path = write_status_report(result, open_days, timestamp)
 
-    # Runs hourly, but only emails when it's actually worth seeing: a run
-    # failure (always -- that's a different signal you'd want regardless of
-    # time), a target day currently open (every hour it stays open, not
-    # just the hour it first did -- a standing reminder beats a one-shot
-    # ping for something this time-sensitive), or the once-daily morning
-    # window so you get a guaranteed "yes, still watching" digest without
-    # 24 emails a day.
     now_ist = datetime.now(IST)
-    in_digest_window = MORNING_DIGEST_START_HOUR <= now_ist.hour < MORNING_DIGEST_END_HOUR
-    should_email = bool(fatal_error) or bool(open_days) or in_digest_window
+    is_digest_run = now_ist.hour == DIGEST_HOUR_IST
+    should_email = bool(open_days) or is_digest_run
 
     if not should_email:
-        logger.info(
-            "No email: no open days, and outside the %d:00-%d:00 IST digest window (now %s IST)",
-            MORNING_DIGEST_START_HOUR, MORNING_DIGEST_END_HOUR, now_ist.strftime("%H:%M"),
-        )
+        logger.info("No email: no open days, and not the %d:00 IST digest run (now %s IST)",
+                    DIGEST_HOUR_IST, now_ist.strftime("%H:%M"))
         return 0
 
     if fatal_error:
