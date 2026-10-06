@@ -526,7 +526,7 @@ def main() -> int:
 
     now_ist = datetime.now(IST)
     is_digest_run = now_ist.hour == DIGEST_HOUR_IST
-    should_email = bool(open_days) or is_digest_run
+    should_email = bool(fatal_error) or bool(open_days) or is_digest_run
 
     if not should_email:
         logger.info("No email: no open days, and not the %d:00 IST digest run (now %s IST)",

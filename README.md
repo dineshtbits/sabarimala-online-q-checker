@@ -28,12 +28,10 @@ banner (no login) once daily; see its own section below.
 ## Email gating
 `monitors/sabarimala_monitor.py` runs every hour at the top of the IST hour
 and sends an email only when:
+- The run failed (sent at any hour, high priority), or
 - Any watched day is **currently** open (every hour it stays open), or
 - It's the 8 AM IST run (`DIGEST_HOUR_IST` in the CONFIG section) — the
   daily status digest, sent whether or not anything is open.
-
-Run failures are **not** emailed at other hours; they show up in the 8 AM
-digest and in the Actions run history.
 
 ## Run the one-shot pipeline locally
 ```
