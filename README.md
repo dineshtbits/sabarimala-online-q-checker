@@ -86,3 +86,31 @@ as an audit log of exactly when something changed.
   Angular Material datepicker), verified against the live site. If the site
   changes its markup, the `SELECTOR_*` constants are centralized near the
   top of the file.
+
+## Fast watcher (old Mac, launchd)
+`monitors/watcher.py` is the fast alert path: it logs in once, reloads the
+booking page every 10 minutes, and pushes an urgent ntfy.sh alert when a
+watched day opens. It runs on the old Mac, not through GitHub Actions,
+because GitHub's scheduler can run late or skip hours. `monitors/run_watcher.sh`
+keeps it alive under launchd, pulls the latest code on every start, and
+falls back to the last commit that compiles if new code is broken.
+
+Setup, on the Mac that should run it:
+```
+git clone https://github.com/dineshtbits/sabarimala-online-q-checker.git ~/sabarimala-watcher
+cd ~/sabarimala-watcher && pip3 install "playwright==1.61.0" && playwright install chromium
+
+cat > ~/.sabarimala_watcher_env << 'EOT'
+export SABARIMALA_USERNAME="..."
+export SABARIMALA_PASSWORD="..."
+export NTFY_TOPIC="a-long-private-topic-name"
+EOT
+chmod 600 ~/.sabarimala_watcher_env
+
+# Replace /Users/CHANGEME in the plist with your clone path, then:
+cp com.dineshtbits.sabarimala-watcher.plist ~/Library/LaunchAgents/
+launchctl load -w ~/Library/LaunchAgents/com.dineshtbits.sabarimala-watcher.plist
+```
+Subscribe to the same topic in the ntfy app. Anyone who knows the topic can
+read the alerts, so keep it unguessable. To update the watcher, `git push`
+to `main`; it picks up the change within one check interval.
