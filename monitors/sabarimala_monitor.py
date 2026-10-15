@@ -92,6 +92,7 @@ BASE_URL = "https://sabarimalaonline.org"
 
 LOG_DIR = Path("./logs")
 STATE_FILE = LOG_DIR / "last_state.json"
+DIGEST_STATE_FILE = LOG_DIR / "last_digest.json"
 
 TARGET_MONTH_NAME = "December"
 TARGET_DAYS = [
@@ -198,6 +199,20 @@ def type_like_human(page: Page, selector: str, text: str, logger: logging.Logger
 def save_current_state(state: dict) -> None:
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+def load_last_digest_date() -> str | None:
+    if DIGEST_STATE_FILE.exists():
+        try:
+            return json.loads(DIGEST_STATE_FILE.read_text(encoding="utf-8")).get("date")
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
+
+
+def save_last_digest_date(date_str: str) -> None:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    DIGEST_STATE_FILE.write_text(json.dumps({"date": date_str}, indent=2), encoding="utf-8")
 
 
 # =============================================================================
@@ -524,12 +539,19 @@ def main() -> int:
 
     report_path = write_status_report(result, open_days, timestamp)
 
+    # Exactly matching DIGEST_HOUR_IST missed most days -- GitHub's
+    # scheduler runs late/skips hours often enough that a run rarely lands
+    # in that exact hour. Instead: the digest is due once we're at or past
+    # DIGEST_HOUR_IST AND it hasn't already gone out today, so the first
+    # run of the day at/after that hour sends it, whichever hour that
+    # actually turns out to be.
     now_ist = datetime.now(IST)
-    is_digest_run = now_ist.hour == DIGEST_HOUR_IST
-    should_email = bool(fatal_error) or bool(open_days) or is_digest_run
+    today_ist = now_ist.strftime("%Y-%m-%d")
+    digest_due = now_ist.hour >= DIGEST_HOUR_IST and load_last_digest_date() != today_ist
+    should_email = bool(fatal_error) or bool(open_days) or digest_due
 
     if not should_email:
-        logger.info("No email: no open days, and not the %d:00 IST digest run (now %s IST)",
+        logger.info("No email: no open days, and digest already sent today or before %d:00 IST (now %s IST)",
                     DIGEST_HOUR_IST, now_ist.strftime("%H:%M"))
         return 0
 
@@ -561,6 +583,12 @@ def main() -> int:
     except Exception as exc:  # noqa: BLE001
         logger.error("Failed to send notification email: %s", exc)
         return 1
+
+    # Any email sent at/after DIGEST_HOUR_IST counts as today's "still
+    # watching" confirmation, alert or digest alike -- no need for a
+    # separate digest later today too.
+    if now_ist.hour >= DIGEST_HOUR_IST:
+        save_last_digest_date(today_ist)
 
     return 0 if not fatal_error else 1
 

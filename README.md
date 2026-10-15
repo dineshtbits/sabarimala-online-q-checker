@@ -30,8 +30,12 @@ banner (no login) once daily; see its own section below.
 and sends an email only when:
 - The run failed (sent at any hour, high priority), or
 - Any watched day is **currently** open (every hour it stays open), or
-- It's the 8 AM IST run (`DIGEST_HOUR_IST` in the CONFIG section) — the
-  daily status digest, sent whether or not anything is open.
+- It's the first run of the day at or after `DIGEST_HOUR_IST` (8 AM IST) —
+  the daily status digest, sent whether or not anything is open.
+  `logs/last_digest.json` tracks the date it last went out, since GitHub's
+  scheduler runs late/skips hours often enough that a run rarely lands in
+  the exact digest hour -- this catches the first run at or after it
+  instead, whichever hour that turns out to be, once a day.
 
 ## Run the one-shot pipeline locally
 ```
@@ -74,10 +78,13 @@ for macOS 13 was removed in Playwright 1.62.0, so those workflows pin
 build. Bump this only after the runner machine is upgraded/replaced.
 
 ## How state persists between runs
-`logs/last_state.json` (calendar check) and `logs/last_marquee.json`
-(banner poll) track last-seen status. The scheduled workflows commit these
-back to the repo after each run (`[skip ci]`), so the diff history doubles
-as an audit log of exactly when something changed.
+`logs/last_state.json` (calendar check), `logs/last_marquee.json` (banner
+poll), and `logs/last_digest.json` (date the daily digest last went out)
+track last-seen status. The scheduled workflows commit these back to the
+repo after each run (`[skip ci]`), so the diff history doubles as an audit
+log of exactly when something changed. These three must stay listed in
+both `.gitignore` (as exceptions to `logs/*`) and the workflow's commit
+step, or `actions/checkout`'s `clean: true` wipes them every run.
 
 ## Notes
 - This repo is public: the code is visible to anyone, but no credentials

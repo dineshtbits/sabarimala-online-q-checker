@@ -3,8 +3,11 @@ __pycache__/
 .DS_Store
 
 # Runtime logs/screenshots/reports are regenerated every run and are noisy
-# in diffs -- but these two state files need to persist across runs
-# (disabled->enabled / marquee-text-change detection), so keep them.
+# in diffs -- but these state files need to persist across runs
+# (disabled->enabled / marquee-text-change detection / once-a-day digest
+# tracking), so keep them. Must also be `git add`ed in the workflow's
+# commit-back step, or actions/checkout's clean:true wipes them each run.
 logs/*
 !logs/last_state.json
 !logs/last_marquee.json
+!logs/last_digest.json
